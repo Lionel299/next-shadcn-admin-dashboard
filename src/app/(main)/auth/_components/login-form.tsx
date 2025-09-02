@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +20,6 @@ const FormSchema = z.object({
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -36,19 +34,40 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      const { remember, ...loginData } = data;
+      const loginData = { email: data.email, password: data.password };
       const result = await AuthService.login(loginData);
       
       if (result.success) {
         toast.success("Login successful! Redirecting to dashboard...");
         // Small delay to ensure cookies are set before redirect
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          const user = result.data?.user;
+          if (user) {
+            // Redirect directly to role-specific dashboard
+            switch (user.role) {
+              case 'admin':
+                window.location.href = "/dashboard/admin";
+                break;
+              case 'org_admin':
+                window.location.href = "/dashboard/org-admin";
+                break;
+              case 'collector':
+                window.location.href = "/dashboard/collector";
+                break;
+              case 'user':
+                window.location.href = "/dashboard/user";
+                break;
+              default:
+                window.location.href = "/dashboard";
+            }
+          } else {
+            window.location.href = "/dashboard";
+          }
         }, 100);
       } else {
         toast.error(result.message || "Login failed");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred during login");
     } finally {
       setIsLoading(false);
