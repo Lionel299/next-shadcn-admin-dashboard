@@ -1,55 +1,45 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, NextRequest } from "next/server";
+
+function getRoleBasedDashboard(userRole: string): string {
+  switch (userRole) {
+    case "admin":
+      return "/dashboard/admin";
+    case "org_admin":
+      return "/dashboard/org-admin";
+    case "collector":
+      return "/dashboard/collector";
+    case "user":
+      return "/dashboard/user";
+    default:
+      return "/dashboard";
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Public routes that don't require authentication
-  const publicRoutes = ['/auth/v2/login', '/auth/v1/register', '/auth/v2/register'];
-  
-  // Check if the current path is a public route
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  
-  // Get the token from cookies or headers
-  const token = request.cookies.get('accessToken')?.value ?? 
-                request.headers.get('authorization')?.replace('Bearer ', '');
-  
-  // If accessing root path, redirect to login
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL('/auth/v2/login', request.url));
+  const publicRoutes = ["/auth/v2/login", "/auth/v1/register", "/auth/v2/register"];
+  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const token =
+    request.cookies.get("accessToken")?.value ?? request.headers.get("authorization")?.replace("Bearer ", "");
+
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/auth/v2/login", request.url));
   }
-  
-  // If user is not authenticated and trying to access protected route
+
   if (!token && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/auth/v2/login', request.url));
+    return NextResponse.redirect(new URL("/auth/v2/login", request.url));
   }
-  
-  // If user is authenticated and trying to access auth pages, redirect based on role
+
   if (token && isPublicRoute) {
-    // Try to decode the token to get user role (basic JWT decode)
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const userRole = payload.role;
-      
-      // Redirect to role-specific dashboard
-      switch (userRole) {
-        case 'admin':
-          return NextResponse.redirect(new URL('/dashboard/admin', request.url));
-        case 'org_admin':
-          return NextResponse.redirect(new URL('/dashboard/org-admin', request.url));
-        case 'collector':
-          return NextResponse.redirect(new URL('/dashboard/collector', request.url));
-        case 'user':
-          return NextResponse.redirect(new URL('/dashboard/user', request.url));
-        default:
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const dashboardUrl = getRoleBasedDashboard(payload.role);
+      return NextResponse.redirect(new URL(dashboardUrl, request.url));
     } catch {
-      // If token decode fails, fallback to generic dashboard
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
-  
+
   return NextResponse.next();
 }
 
@@ -62,6 +52,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
