@@ -7,9 +7,9 @@ import { GoogleButton } from "../../_components/social-auth/google-button";
 
 export default function RegisterV1() {
   return (
-    <div className="flex h-dvh">
-      <div className="bg-background flex w-full items-center justify-center p-8 lg:w-2/3">
-        <div className="w-full max-w-md space-y-10 py-24 lg:py-32">
+    <div className="flex min-h-screen">
+      <div className="bg-background flex w-full items-center justify-center p-4 lg:w-2/3 overflow-y-auto">
+        <div className="w-full max-w-md space-y-6 py-8 lg:py-12">
           <div className="space-y-4 text-center">
             <div className="font-medium tracking-tight">Register</div>
             <div className="text-muted-foreground mx-auto max-w-xl">
@@ -21,7 +21,7 @@ export default function RegisterV1() {
             <GoogleButton className="w-full" variant="outline" />
             <p className="text-muted-foreground text-center text-xs">
               Already have an account?{" "}
-              <Link href="login" className="text-primary">
+              <Link href="/auth/v2/login" className="text-primary">
                 Login
               </Link>
             </p>
